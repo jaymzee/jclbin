@@ -20,7 +20,6 @@ function getInterfaces() {
 }
 
 function serverUrl(server) {
-  console.log('serverurl');
   let { address, family, port } = server.address()
 
   // ipv6 address aren't allowed in URLs without brackets
