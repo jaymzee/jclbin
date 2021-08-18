@@ -1,15 +1,4 @@
-const mynet = require('./mynet');
-const express = require('express');
-const multer = require('multer');
-const upload = multer({dest: 'public/uploads/'});
-const port = 5000;
-const app = express();
-
-app.use(express.urlencoded({extended: true}));
-app.use('/static', express.static('public'));
-app.use(express.static('public/uploads'));
-
-man_page = `
+manual = `
 jclbin(1)                        JCLBIN                        jclbin(1)
 
 NAME
@@ -32,21 +21,35 @@ SEE ALSO
     http://ix.io
     http://clbin.com
     http://sprunge.us
-`;
+`
+const fs = require('fs');
+const iface = require('./if');
+const express = require('express');
+const multer = require('multer');
+const upload = multer({dest: 'public/uploads/'});
+const protocol = 'http';
+const port = 5000;
+const app = express();
+
+app.use(express.urlencoded({extended: true}));
+app.use('/static', express.static('public'));
+app.use(express.static('public/uploads'));
 
 app.get('/', (req, res) => {
   res.contentType('text/plain');
-  res.send(man_page);
+  res.send(manual);
 });
 
 app.post('/', upload.single('f'), (req, res) => {
   const filename = req.file.filename;
-  res.send(`${mynet.serverUrl(server)}/${filename}\n`);
+  const url = iface.serverUrl(server, protocol, true);
+  res.send(`${url}/${filename}\n`);
   console.log('file uploaded:', filename);
+  fs.appendFileSync('public/uploads/file.log', JSON.stringify(req.file) + '\n');
 });
 
 const server = app.listen(port, () => {
-  for (const [key, value] of Object.entries(mynet.getInterfaces())) {
+  for (const [key, value] of Object.entries(iface.enumerate(false))) {
     console.log(`listening on [${key}] http://${value[0]}:${port}`);
   }
 });
