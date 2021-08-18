@@ -22,7 +22,7 @@ SEE ALSO
     http://clbin.com
     http://sprunge.us
 `
-const fs = require('fs');
+const data = require('./data');
 const iface = require('./if');
 const express = require('express');
 const multer = require('multer');
@@ -41,11 +41,13 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', upload.single('f'), (req, res) => {
+  const remoteAddress = req.connection.remoteAddress;
+  const file = Object.assign({remoteAddress}, req.file);
   const filename = req.file.filename;
   const url = iface.serverUrl(server, protocol, true);
+  console.log('file upload:', filename, file.originalname, remoteAddress);
+  data.logFile(file);
   res.send(`${url}/${filename}\n`);
-  console.log('file uploaded:', filename);
-  fs.appendFileSync('public/uploads/file.log', JSON.stringify(req.file) + '\n');
 });
 
 const server = app.listen(port, () => {
