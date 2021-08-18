@@ -7,18 +7,25 @@ app.use(express.urlencoded({extended: true}));
 app.use('/static', express.static('public'));
 app.use(express.static('public/uploads'));
 
+const serverUrl = server => {
+  let { address, family, port } = server.address()
+  if (family == 'IPv6' && address.includes(':')) {
+    address = `[${address}]`
+  }
+  return `http://${address}:${port}`
+};
+
 app.get('/', (req, res) => {
   res.send('Usage:\n');
 });
 
 app.post('/', upload.single('f'), (req, res) => {
-  const { address, port } = server.address();
   const filename = req.file.filename;
+  res.send(`${serverUrl(server)}/${filename}\n`);
   console.log('file uploaded:', filename);
-  res.send(`http://${address}:${port}/${filename}\n`);
 });
 
 const server = app.listen(5000, () => {
-  const { address, port } = server.address();
-  console.log(`Example app listening at http://${address}:${port}`);
+  console.log(`jclbin listening at ${serverUrl(server)}`);
 });
+
