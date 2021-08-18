@@ -1,3 +1,4 @@
+const mynet = require('./mynet');
 const express = require('express');
 const multer = require('multer');
 const upload = multer({dest: 'public/uploads/'});
@@ -32,13 +33,7 @@ SEE ALSO
     http://sprunge.us
 `;
 
-const serverUrl = server => {
-  let { address, family, port } = server.address()
-  if (family == 'IPv6' && address.includes(':')) {
-    address = `[${address}]`
-  }
-  return `http://${address}:${port}`
-};
+const serverUrl = mynet.serverUrl;
 
 app.get('/', (req, res) => {
   res.send(man_page);
@@ -54,3 +49,6 @@ const server = app.listen(5000, () => {
   console.log(`jclbin listening at ${serverUrl(server)}`);
 });
 
+const nets = mynet.getInterfaces();
+console.log('local adddresses:');
+console.log(nets);
