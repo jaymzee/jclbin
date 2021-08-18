@@ -35,6 +35,7 @@ SEE ALSO
 `;
 
 app.get('/', (req, res) => {
+  res.contentType('text/plain');
   res.send(man_page);
 });
 
