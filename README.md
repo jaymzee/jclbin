@@ -1,8 +1,8 @@
 a simple http pastebin server
 
-start the server with:
+start the server with `npm start` or:
 ```
-node src/index.js
+node src/server.js
 ```
 
 upload files with curl
