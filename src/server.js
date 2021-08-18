@@ -2,6 +2,7 @@ const mynet = require('./mynet');
 const express = require('express');
 const multer = require('multer');
 const upload = multer({dest: 'public/uploads/'});
+const port = 5000;
 const app = express();
 
 app.use(express.urlencoded({extended: true}));
@@ -33,22 +34,19 @@ SEE ALSO
     http://sprunge.us
 `;
 
-const serverUrl = mynet.serverUrl;
-
 app.get('/', (req, res) => {
   res.send(man_page);
 });
 
 app.post('/', upload.single('f'), (req, res) => {
   const filename = req.file.filename;
-  res.send(`${serverUrl(server)}/${filename}\n`);
+  res.send(`${mynet.serverUrl(server)}/${filename}\n`);
   console.log('file uploaded:', filename);
 });
 
-const server = app.listen(5000, () => {
-  console.log(`jclbin listening at ${serverUrl(server)}`);
+const server = app.listen(port, () => {
+  for (const [key, value] of Object.entries(mynet.getInterfaces())) {
+    console.log(`listening on [${key}] http://${value[0]}:${port}`);
+  }
 });
 
-const nets = mynet.getInterfaces();
-console.log('local adddresses:');
-console.log(nets);

@@ -1,12 +1,13 @@
 const os = require('os');
 const interfaces = getInterfaces();
 
+// return non-local and non-ipv6 interfaces
 function getInterfaces() {
-  const nets = os.networkInterfaces();
+  const ifs = os.networkInterfaces();
   const results = {};
 
-  for (const name of Object.keys(nets)) {
-      for (const net of nets[name]) {
+  for (const [name, nets] of Object.entries(ifs)) {
+      for (const net of nets) {
           // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
           if (net.family === 'IPv4' && !net.internal) {
               if (!results[name]) {
