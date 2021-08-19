@@ -22,19 +22,16 @@ SEE ALSO
     http://clbin.com
     http://sprunge.us
 `
-const process = require('process');
-const log = require('./log');
 const ip = require('./ip');
+const log = require('./log');
 const express = require('express');
 const multer = require('multer');
+const process = require('process');
+
 const upload = multer({dest: 'public/uploads/'});
 const protocol = 'http';
 const port = 5000;
 const app = express();
-
-//app.use(express.urlencoded({extended: true}));
-//app.use('/static', express.static('public'));
-//app.use(express.static('public/uploads'));
 
 app.get('/', (req, res) => {
   res.contentType('text/plain');
@@ -44,17 +41,16 @@ app.get('/', (req, res) => {
 app.get('/:id', (req, res) => {
   const remoteAddress = req.connection.remoteAddress;
   const file = log.get(req.params.id);
-  console.log('file download:', file.digest, file.originalname, remoteAddress);
+  console.log('file dnld:', file.digest, file.originalname, remoteAddress);
   res.sendFile(file.path, { root: process.cwd() });
 });
 
 app.post('/', upload.single('f'), (req, res) => {
   const remoteAddress = req.connection.remoteAddress;
   const file = Object.assign({remoteAddress}, req.file);
-  const filename = req.file.filename;
   const url = ip.serverUrl(server, protocol, true);
-  console.log('file upload:', filename, file.originalname, remoteAddress);
   const tag = log.write(file);
+  console.log('file upld:', file.digest, file.originalname, remoteAddress);
   res.send(`${url}/${tag}\n`);
 });
 
