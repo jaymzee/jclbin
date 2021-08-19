@@ -1,8 +1,8 @@
 const os = require('os');
-const interfaces = enumerate(true);
+const interfaces = enumerateIfs(true);
 
 // return ipv4 interfaces
-function enumerate(nonlocal) {
+function enumerateIfs(nonlocal) {
   const ifs = os.networkInterfaces();
   const results = {};
 
@@ -46,5 +46,5 @@ function serverUrl(server, protocol, nonlocal) {
   return `${protocol}://${address}:${port}`;
 }
 
-exports.enumerate = enumerate;
+exports.enumerateIfs = enumerateIfs;
 exports.serverUrl = serverUrl;
