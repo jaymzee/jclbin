@@ -1,4 +1,5 @@
-manual = `
+'use strict'
+const manual = `
 jclbin(1)                        JCLBIN                        jclbin(1)
 
 NAME
@@ -26,18 +27,21 @@ const ip = require('./ip');
 const log = require('./log');
 const express = require('express');
 const multer = require('multer');
+const path = require('path');
 const process = require('process');
 
-const upload = multer({dest: 'public/uploads/'});
+const upload = multer({dest: path.join('public', 'uploads')});
 const protocol = 'http';
 const port = 5000;
 const app = express();
 
+// man page, help, usage
 app.get('/', (req, res) => {
   res.contentType('text/plain');
   res.send(manual);
 });
 
+// retreive file
 app.get('/:id', (req, res) => {
   const remoteAddress = req.connection.remoteAddress;
   const file = log.get(req.params.id);
@@ -45,6 +49,7 @@ app.get('/:id', (req, res) => {
   res.sendFile(file.path, { root: process.cwd() });
 });
 
+// post a file
 app.post('/', upload.single('f'), (req, res) => {
   const remoteAddress = req.connection.remoteAddress;
   const file = Object.assign({remoteAddress}, req.file);

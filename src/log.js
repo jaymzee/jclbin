@@ -1,7 +1,10 @@
+"use strict";
+
 const crypto = require('crypto');
 const fs = require('fs');
+const path = require('path');
 
-const logFile = 'public/uploads/log.json'
+const logFile = path.join('public', 'uploads', 'log.json');
 
 let files = []   // in memory copy of file.log
 const index = new Map();
