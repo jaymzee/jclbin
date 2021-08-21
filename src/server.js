@@ -38,7 +38,7 @@ const app = express();
 // man page, help, usage
 app.get('/', (req, res) => {
   res.contentType('text/plain');
-  res.send(manual);
+  res.send(manual.replaceAll(/\n/g, '\r\n'));
 });
 
 // retreive file
@@ -56,7 +56,7 @@ app.post('/', upload.single('f'), (req, res) => {
   const url = ip.serverUrl(server, protocol, true);
   const tag = log.write(file);
   console.log('file upld:', file.digest, file.originalname, remoteAddress);
-  res.send(`${url}/${tag}\n`);
+  res.send(`${url}/${tag}\r\n`);
 });
 
 const server = app.listen(port, () => {
