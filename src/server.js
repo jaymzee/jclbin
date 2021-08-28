@@ -55,8 +55,12 @@ app.get('/', (req, res) => {
 app.get('/:id', (req, res) => {
   const remoteAddress = req.connection.remoteAddress;
   const file = log.get(req.params.id);
-  console.log('file dnld:', file.digest, file.originalname, remoteAddress);
-  res.sendFile(file.path, { root: process.cwd() });
+  if (file) {
+    console.log('file dnld:', file.digest, file.originalname, remoteAddress);
+    res.sendFile(file.path, { root: process.cwd() });
+  } else {
+    res.sendStatus(404);
+  }
 });
 
 // post a file
