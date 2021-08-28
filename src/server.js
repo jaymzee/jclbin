@@ -1,5 +1,12 @@
 'use strict'
-const manual = `
+const manpage = `
+<html>
+<head>
+  <title>jclbin</title>
+  <link rel="icon" href="data:,">
+</head>
+<body>
+<pre>
 jclbin(1)                        JCLBIN                        jclbin(1)
 
 NAME
@@ -22,6 +29,9 @@ SEE ALSO
     http://ix.io
     http://clbin.com
     http://sprunge.us
+</pre>
+</body>
+</html>
 `
 const ip = require('./ip');
 const log = require('./log');
@@ -37,8 +47,8 @@ const app = express();
 
 // man page, help, usage
 app.get('/', (req, res) => {
-  res.contentType('text/plain');
-  res.send(manual.replaceAll(/\n/g, '\r\n'));
+  res.contentType('text/html');
+  res.send(manpage.replaceAll(/\n/g, '\r\n'));
 });
 
 // retreive file
