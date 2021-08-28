@@ -48,7 +48,7 @@ const app = express();
 // man page, help, usage
 app.get('/', (req, res) => {
   res.contentType('text/html');
-  res.send(manpage.replaceAll(/\n/g, '\r\n'));
+  res.send(manpage.replace(/\n/g, '\r\n'));
 });
 
 // retreive file
