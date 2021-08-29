@@ -1,41 +1,9 @@
 'use strict'
-const manpage = `
-<html>
-<head>
-  <title>jclbin</title>
-  <link rel="icon" href="data:,">
-</head>
-<body>
-<pre>
-jclbin(1)                        JCLBIN                        jclbin(1)
 
-NAME
-    jclbin: command line pastebin:
-
-SYNOPSIS
-    curl -F 'jclbin=@filename' http://example.com
-
-DESCRIPTION
-    A simple http pastebin server like ix.io, clbin.com, or sprunge.us
-    It currently does not create nice short urls or support curl's
-    redirect from stdin "f=<-" but i'll get around to it.
-
-EXAMPLE
-    $ curl -F 'f=@filename' https://example.com
-    http://example.com/2c42f4fcbd451a05bc904b06eefcc2ee
-
-
-SEE ALSO
-    http://ix.io
-    http://clbin.com
-    http://sprunge.us
-</pre>
-</body>
-</html>
-`
 const ip = require('./ip');
 const log = require('./log');
 const express = require('express');
+const fs = require('fs');
 const multer = require('multer');
 const path = require('path');
 const process = require('process');
@@ -44,11 +12,20 @@ const upload = multer({dest: path.join('public', 'uploads')});
 const protocol = 'http';
 const port = 5000;
 const app = express();
+const manpage = fs.readFileSync(path.join(__dirname, 'manpage.txt'), 'utf-8')
+const layout = fs.readFileSync(path.join(__dirname, 'layout.html'), 'utf-8')
 
 // man page, help, usage
 app.get('/', (req, res) => {
-  res.contentType('text/html');
-  res.send(manpage.replace(/\n/g, '\r\n'));
+  const user_agent = req.headers['user-agent']
+  if (user_agent.includes('curl')) {
+    res.contentType('text/plain');
+    res.send(manpage.replace(/\n/g, '\r\n'));
+  } else {
+    const html = layout.replace('{BODY}', manpage);
+    res.contentType('text/html');
+    res.send(html);
+  }
 });
 
 // retreive file
