@@ -14,13 +14,14 @@ const port = 5000;
 const app = express();
 const manpage = fs.readFileSync(path.join(__dirname, 'manpage.txt'), 'utf-8')
 const layout = fs.readFileSync(path.join(__dirname, 'layout.html'), 'utf-8')
+const agentIsTextRe = /curl|PowerShell|hjdicks/
 
 // man page, help, usage
 app.get('/', (req, res) => {
   const user_agent = req.headers['user-agent']
-  if (user_agent.includes('curl')) {
+  if (agentIsTextRe.test(user_agent)) {
     res.contentType('text/plain');
-    res.send(manpage.replace(/\n/g, '\r\n'));
+    res.send(manpage);
   } else {
     const html = layout.replace('{BODY}', manpage);
     res.contentType('text/html');
