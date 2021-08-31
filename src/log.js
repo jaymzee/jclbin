@@ -4,31 +4,25 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-const logFile = path.join('public', 'uploads', 'log.json');
-
-let files = []   // in memory copy of file.log
+const files = []
 const index = new Map();
-init();
-
-function init() {
-  if (fs.existsSync(logFile)) {
-    const buf = fs.readFileSync(logFile);
-    let s = buf.toString();
-    s = s.replace(/\n/g, ',');  // replace newlines with comma
-    s = `[${s.slice(0, -1)}]`;  // remove last comma and wrap in []
-    files = JSON.parse(s);
-    for (const file of files) {
-      if (file.digest) {
-        index.set(shorten(file.digest), file);
-      }
+const logFilename = path.join('public', 'uploads', 'log.json');
+(() => {
+  if (fs.existsSync(logFilename)) {
+    const s = fs.readFileSync(logFilename).toString().replace(/\n/g, ',');
+    for (const f of JSON.parse(`[${s.slice(0, -1)}]`)) {
+      files.push(f)
+      index.set(shorten(f.digest), f);
     }
     console.log(`${index.size} files in uploads`);
   }
-}
+})();
 
+// return url safe base64 encoded md5sum of the file contents
 function digest(path) {
   const buf = fs.readFileSync(path);
-  return crypto.createHash('md5').update(buf).digest('base64');
+  const md5sum = crypto.createHash('md5').update(buf).digest('base64');
+  return md5sum.replace('/', '-');
 }
 
 function shorten(digest) {
@@ -42,10 +36,11 @@ function write(file) {
   const id = shorten(file.digest);
   files.push(file);
   index.set(id, file)
-  fs.appendFileSync(logFile, JSON.stringify(file) + '\n');
+  fs.appendFileSync(logFilename, JSON.stringify(file) + '\n');
   return id;
 }
 
+// retreive file info from the index
 function get(id) {
   return index.get(id);
 }
