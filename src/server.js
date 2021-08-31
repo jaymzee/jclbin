@@ -10,11 +10,12 @@ const process = require('process');
 
 const app = express();
 const upload = multer({dest: path.join('public', 'uploads')});
-const manpage = fs.readFileSync(path.join(__dirname, 'manpage.txt'), 'utf-8')
-const layout = fs.readFileSync(path.join(__dirname, 'layout.html'), 'utf-8')
+const manpage = fs.readFileSync(path.join(__dirname, 'manpage.txt'), 'utf-8');
+const uploadForm = fs.readFileSync(path.join(__dirname, 'upload.html'), 'utf-8');
+const layout = fs.readFileSync(path.join(__dirname, 'layout.html'), 'utf-8');
 const protocol = 'http';
-const port = parseInt(process.argv.slice(-1)[0]) || 5000
-const agentPrefersText = /curl|PowerShell|hjdicks/
+const port = parseInt(process.argv.slice(-1)[0]) || 5000;
+const agentPrefersText = /curl|PowerShell|hjdicks/;
 
 function pad(num, n, c) {
   return num.toString().padStart(n, c)
@@ -32,10 +33,13 @@ app.get('/', (req, res) => {
   if (agentPrefersText.test(user_agent)) {
     help(req, res)
   } else {
-    const html = layout.replace('{BODY}', manpage);
-    res.contentType('text/html');
-    res.send(html);
+    res.send(layout.replace('{BODY}', `<pre>${manpage}</pre>`));
   }
+});
+
+// upload form
+app.get('/upload', (req, res) => {
+    res.send(layout.replace('{BODY}', `<pre>${uploadForm}</pre>`));
 });
 
 app.get('/ls', (req, res) => {
