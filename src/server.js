@@ -8,13 +8,13 @@ const multer = require('multer');
 const path = require('path');
 const process = require('process');
 
-const upload = multer({dest: path.join('public', 'uploads')});
-const protocol = 'http';
-const port = 5000;
 const app = express();
+const upload = multer({dest: path.join('public', 'uploads')});
 const manpage = fs.readFileSync(path.join(__dirname, 'manpage.txt'), 'utf-8')
 const layout = fs.readFileSync(path.join(__dirname, 'layout.html'), 'utf-8')
-const agentIsTextRe = /curl|PowerShell|hjdicks/
+const protocol = 'http';
+const port = parseInt(process.argv.slice(-1)[0]) || 5000
+const agentPrefersText = /curl|PowerShell|hjdicks/
 
 function pad(num, n, c) {
   return num.toString().padStart(n, c)
@@ -29,7 +29,7 @@ function help(req, res) {
 app.get('/help', help);
 app.get('/', (req, res) => {
   const user_agent = req.headers['user-agent']
-  if (agentIsTextRe.test(user_agent)) {
+  if (agentPrefersText.test(user_agent)) {
     help(req, res)
   } else {
     const html = layout.replace('{BODY}', manpage);
