@@ -16,17 +16,41 @@ const manpage = fs.readFileSync(path.join(__dirname, 'manpage.txt'), 'utf-8')
 const layout = fs.readFileSync(path.join(__dirname, 'layout.html'), 'utf-8')
 const agentIsTextRe = /curl|PowerShell|hjdicks/
 
+function pad(num, n, c) {
+  return num.toString().padStart(n, c)
+}
+
+function help(req, res) {
+  res.contentType('text/plain');
+  res.send(manpage);
+}
+
 // man page, help, usage
+app.get('/help', help);
 app.get('/', (req, res) => {
   const user_agent = req.headers['user-agent']
   if (agentIsTextRe.test(user_agent)) {
-    res.contentType('text/plain');
-    res.send(manpage);
+    help(req, res)
   } else {
     const html = layout.replace('{BODY}', manpage);
     res.contentType('text/html');
     res.send(html);
   }
+});
+
+app.get('/ls', (req, res) => {
+  function df(d) {
+    const mo = new Intl.DateTimeFormat('en', { month: 'short' }).format(d);
+    const da = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(d);
+    const hr = pad(d.getHours(), 2, '0')
+    const mn = pad(d.getMinutes(), 2, '0')
+    return `${mo} ${da} ${hr}:${mn}`
+  }
+  const dir = [...log.ls().values()];
+  const a = dir.map(f => `${f.tag} ${pad(f.size, 10, ' ')} ` +
+                         `${df(f.date)} ${f.name}`);
+  res.contentType('text/plain');
+  res.send(a.join('\n'));
 });
 
 // retreive file

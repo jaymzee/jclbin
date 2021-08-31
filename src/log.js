@@ -11,6 +11,7 @@ const logFilename = path.join('public', 'uploads', 'log.json');
   if (fs.existsSync(logFilename)) {
     const s = fs.readFileSync(logFilename).toString().replace(/\n/g, ',');
     for (const f of JSON.parse(`[${s.slice(0, -1)}]`)) {
+      f.date = new Date(f.date) // parse string
       files.push(f)
       index.set(shorten(f.digest), f);
     }
@@ -33,6 +34,7 @@ function shorten(digest) {
 // file is the req.file object from express
 function write(file) {
   file.digest = digest(file.path);
+  file.date = new Date()
   const id = shorten(file.digest);
   files.push(file);
   index.set(id, file)
@@ -45,5 +47,19 @@ function get(id) {
   return index.get(id);
 }
 
+function ls() {
+  const dir = new Map(files.map(f => [
+    f.originalname,
+    {
+      name: f.originalname,
+      tag: shorten(f.digest),
+      size: f.size,
+      date: f.date
+    }
+  ]));
+  return dir;
+}
+
 exports.write = write;
 exports.get = get;
+exports.ls = ls;
