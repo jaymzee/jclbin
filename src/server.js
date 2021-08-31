@@ -50,7 +50,7 @@ app.get('/ls', (req, res) => {
   const a = dir.map(f => `${f.tag} ${pad(f.size, 10, ' ')} ` +
                          `${df(f.date)} ${f.name}`);
   res.contentType('text/plain');
-  res.send(a.join('\n'));
+  res.send(a.join('\n') + '\n');
 });
 
 // retreive file
