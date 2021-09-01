@@ -4,52 +4,62 @@ const ip = require('./ip');
 const log = require('./log');
 const express = require('express');
 const fs = require('fs');
+const fsp = require('fs/promises');
 const multer = require('multer');
 const path = require('path');
 const process = require('process');
 
 const app = express();
-const upload = multer({dest: path.join('public', 'uploads')});
-const layout = fs.readFileSync(path.join('public', 'layout.html'), 'utf-8');
+const root = 'public'
+const static_ = path.join(root, 'static')
+const upload = multer({dest: path.join(root, 'uploads')});
+const layout = fs.readFileSync(path.join(static_, 'layout.html'), 'utf8');
+const manPage = fs.readFileSync(path.join(static_, 'manpage.txt'), 'utf8');
 const protocol = 'http';
 const port = parseInt(process.argv.slice(-1)[0]) || 5000;
 const agentPrefersText = /curl|PowerShell|hjdicks/;
 
+// pad an unsigned number with n spaces or zeros
 function pad(num, n, c) {
   return num.toString().padStart(n, c)
 }
 
-// render man page as text/plain
-function manPage(req, res) {
-  const page = fs.readFileSync(path.join('public', 'manpage.txt'), 'utf-8');
+// man page always text/plain
+function getManPage(req, res) {
   res.contentType('text/plain');
-  res.send(page);
+  res.send(manPage);
 }
 
-// default route shows the man page
-app.get('/sh/man', manPage);
-app.get('/', (req, res) => {
-  if (agentPrefersText.test(req.headers['user-agent'])) {
-    manPage(req, res)
-  } else {
-    const body = fs.readFileSync(path.join('public', 'manpage.txt'), 'utf-8');
-    res.send(layout.replace('{BODY}', `<pre>${body}</pre>`));
-  }
+// favicon
+app.get('/favicon.ico', async (req, res) => {
+  res.contentType('image/png');
+  res.send(await fsp.readFile(path.join('public', 'static', 'favicon.ico')));
 });
 
-// post a file
-app.post('/', upload.single('f'), (req, res) => {
-  if (!req.file) {
-    res.sendStatus(400);
-    return;
-  }
-  const remote = req.connection.remoteAddress;
-  const file = Object.assign({remote}, req.file);
-  const url = ip.serverUrl(server, protocol, true);
-  const tag = log.write(file);
-  console.log('file upld:', file.digest, file.originalname, remote);
-  res.send(`${url}/${tag}\r\n`);
+// upload form
+app.get('/f/upload', async (req, res) => {
+  const s = await fsp.readFile(path.join('public', 'static', 'upload.html'));
+  res.send(layout.replace('{BODY}', `${s}`));
 });
+
+// list uploads
+app.get('/sh/ls', (req, res) => {
+  function df(d) {
+    const mo = new Intl.DateTimeFormat('en', { month: 'short' }).format(d);
+    const da = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(d);
+    const hr = pad(d.getHours(), 2, '0')
+    const mn = pad(d.getMinutes(), 2, '0')
+    return `${mo} ${da} ${hr}:${mn}`
+  }
+  const dir = [...log.ls().values()];
+  const a = dir.map(f => `${f.id} ${pad(f.size, 10, ' ')} ` +
+                         `${df(f.date)} ${f.name}`);
+  res.contentType('text/plain');
+  res.send(a.join('\n') + '\n');
+});
+
+// man page (default route)
+app.get('/sh/man', getManPage);
 
 // retreive uploaded file
 app.get('/:id', (req, res) => {
@@ -60,33 +70,31 @@ app.get('/:id', (req, res) => {
     res.status(404).send("bad id " + id);
     return;
   }
-  console.log('file dnld:', file.digest, file.originalname, remote);
+  res.set('Content-Disposition', `attachment; filename="${file.originalname}"`);
+  console.log('file dnld:', file.sha1, file.originalname, remote);
   res.sendFile(file.path, { root: process.cwd() });
 });
 
-app.get('/sh/ls', (req, res) => {
-  function df(d) {
-    const mo = new Intl.DateTimeFormat('en', { month: 'short' }).format(d);
-    const da = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(d);
-    const hr = pad(d.getHours(), 2, '0')
-    const mn = pad(d.getMinutes(), 2, '0')
-    return `${mo} ${da} ${hr}:${mn}`
+app.get('/', (req, res) => {
+  if (agentPrefersText.test(req.headers['user-agent'])) {
+    getManPage(req, res)
+  } else {
+    res.send(layout.replace('{BODY}', `<pre>${manPage}</pre>`));
   }
-  const dir = [...log.ls().values()];
-  const a = dir.map(f => `${f.tag} ${pad(f.size, 10, ' ')} ` +
-                         `${df(f.date)} ${f.name}`);
-  res.contentType('text/plain');
-  res.send(a.join('\n') + '\n');
 });
 
-// upload form
-app.get('/f/submit', (req, res) => {
-  const form = fs.readFileSync(path.join('public', 'submit.html'), 'utf-8');
-  res.send(layout.replace('{BODY}', `${form}`));
-});
-
-app.get('/i/favicon.png', (req, res) => {
-  res.send(fs.readFileSync(path.join('public', 'favicon.png')));
+// post a file
+app.post('/', upload.single('f'), async (req, res) => {
+  if (!req.file) {
+    res.sendStatus(400);
+    return;
+  }
+  const remote = req.connection.remoteAddress;
+  const file = Object.assign({remote}, req.file);
+  const baseUrl = `${protocol}://${req.headers.host}`
+  const tag = await log.write(file);
+  console.log('file upld:', file.sha1, file.originalname, remote);
+  res.send(`${baseUrl}/${tag}\n`);
 });
 
 const server = app.listen(port, () => {

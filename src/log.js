@@ -2,42 +2,43 @@
 
 const crypto = require('crypto');
 const fs = require('fs');
+const fsp = require('fs/promises');
 const path = require('path');
 
 const files = []
 const index = new Map();
-const logFilename = path.join('public', 'uploads', 'log.json');
+const logPath = path.join('public', 'uploads', 'log.json');
 (() => {
-  if (fs.existsSync(logFilename)) {
-    const s = fs.readFileSync(logFilename).toString().replace(/\n/g, ',');
+  if (fs.existsSync(logPath)) {
+    const s = fs.readFileSync(logPath, 'utf8').replace(/\n/g, ',');
     for (const f of JSON.parse(`[${s.slice(0, -1)}]`)) {
       f.date = new Date(f.date) // parse string
       files.push(f)
-      index.set(shorten(f.digest), f);
+      index.set(fileId(f.sha1), f);
     }
     console.log(`${index.size} files in uploads`);
   }
 })();
 
-// return url safe base64 encoded md5sum of the file contents
-function digest(path) {
-  const buf = fs.readFileSync(path);
-  return crypto.createHash('md5').update(buf).digest('base64');
+// return url safe base64 encoded sha1sum of the file contents
+async function sha1sum(path) {
+  const buf = await fsp.readFile(path);
+  return crypto.createHash('sha1').update(buf).digest('base64');
 }
 
-function shorten(digest) {
-  return digest.slice(0, 5).replace('+', '_').replace('/', '-');
+function fileId(digest) {
+  return digest.slice(0, 4).replace('+', '_').replace('/', '-');
 }
 
 // record extra file upload information
 // file is the req.file object from express
-function write(file) {
-  file.digest = digest(file.path);
-  file.date = new Date()
-  const id = shorten(file.digest);
+async function write(file) {
+  file.sha1 = await sha1sum(file.path);
+  file.date = new Date();
+  const id = fileId(file.sha1);
   files.push(file);
-  index.set(id, file)
-  fs.appendFileSync(logFilename, JSON.stringify(file) + '\n');
+  index.set(id, file);
+  fsp.appendFile(logPath, JSON.stringify(file) + '\n');
   return id;
 }
 
@@ -47,16 +48,16 @@ function get(id) {
 }
 
 function ls() {
-  const dir = new Map(files.map(f => [
+  const directory = new Map(files.map(f => [
     f.originalname,
     {
       name: f.originalname,
-      tag: shorten(f.digest),
+      id: fileId(f.sha1),
       size: f.size,
       date: f.date
     }
   ]));
-  return dir;
+  return new Map([...directory].sort());
 }
 
 exports.write = write;

@@ -21,26 +21,4 @@ function enumerateIfs(nonlocal) {
   return results;
 }
 
-function serverUrl(server, protocol, nonlocal) {
-  let { address, family, port } = server.address();
-
-  if (nonlocal) {
-    // instead of returning 0.0.0.0 or [::], use the first
-    // interface cached from os.networkInterfaces()
-    const ifnames = Object.keys(interfaces);
-    if (ifnames.length > 0) {
-      address = interfaces[ifnames[0]];
-    }
-  }
-
-  // make sure IPv6 addresses are escaped
-  // with square brackets if they contain colons.
-  if (family == 'IPv6' && address.includes(':')) {
-    address = `[${address}]`;
-  }
-
-  return `${protocol}://${address}:${port}`;
-}
-
 exports.enumerateIfs = enumerateIfs;
-exports.serverUrl = serverUrl;
