@@ -26,7 +26,7 @@ function digest(path) {
 }
 
 function shorten(digest) {
-  return digest.slice(0, 5).md5sum.replace('+', '_').replace('/', '-');
+  return digest.slice(0, 5).replace('+', '_').replace('/', '-');
 }
 
 // record extra file upload information
