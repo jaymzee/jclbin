@@ -22,12 +22,11 @@ const logFilename = path.join('public', 'uploads', 'log.json');
 // return url safe base64 encoded md5sum of the file contents
 function digest(path) {
   const buf = fs.readFileSync(path);
-  const md5sum = crypto.createHash('md5').update(buf).digest('base64');
-  return md5sum.replace('/', '-');
+  return crypto.createHash('md5').update(buf).digest('base64');
 }
 
 function shorten(digest) {
-  return digest.slice(0, 7);
+  return digest.slice(0, 5).md5sum.replace('+', '_').replace('/', '-');
 }
 
 // record extra file upload information

@@ -24,11 +24,6 @@ function enumerateIfs(nonlocal) {
 function serverUrl(server, protocol, nonlocal) {
   let { address, family, port } = server.address();
 
-  // ipv6 address aren't allowed in URLs without brackets
-  if (family == 'IPv6' && address.includes(':')) {
-    address = `[${address}]`;
-  }
-
   if (nonlocal) {
     // instead of returning 0.0.0.0 or [::], use the first
     // interface cached from os.networkInterfaces()
@@ -36,12 +31,12 @@ function serverUrl(server, protocol, nonlocal) {
     if (ifnames.length > 0) {
       address = interfaces[ifnames[0]];
     }
-  } else {
-    // at a bare minimum make sure IPv6 addresses are escaped
-    // with square brackets if they contain colons.
-    if (family == 'IPv6' && address.includes(':')) {
-      address = `[${address}]`;
-    }
+  }
+
+  // make sure IPv6 addresses are escaped
+  // with square brackets if they contain colons.
+  if (family == 'IPv6' && address.includes(':')) {
+    address = `[${address}]`;
   }
 
   return `${protocol}://${address}:${port}`;

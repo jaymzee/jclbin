@@ -13,7 +13,7 @@ DESCRIPTION
 
 EXAMPLE
     $ curl -F 'f=@filename' https://example.com
-    http://example.com/2c42f4fcbd451a05bc904b06eefcc2ee
+    http://example.com/2C42f
 
 
 SEE ALSO
