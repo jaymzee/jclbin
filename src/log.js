@@ -1,14 +1,20 @@
-"use strict";
+'use strict';
 
 const crypto = require('crypto');
 const fs = require('fs');
-const fsp = require('fs/promises');
 const path = require('path');
 
 const files = [];
 const index = new Map();
 const logPath = path.join('public', 'uploads', 'log.json');
-(() => {
+
+function fileId(digest) {
+  return digest.slice(0, 4).replace('+', '_').replace('/', '-');
+}
+
+// initialize module, populate files and index
+// returns number of files
+function init() {
   if (fs.existsSync(logPath)) {
     const s = fs.readFileSync(logPath, 'utf8').replace(/\n/g, ',');
     for (const f of JSON.parse(`[${s.slice(0, -1)}]`)) {
@@ -16,18 +22,14 @@ const logPath = path.join('public', 'uploads', 'log.json');
       files.push(f);
       index.set(fileId(f.sha1), f);
     }
-    console.log(`${index.size} files in uploads`);
   }
-})();
-
-// return url safe base64 encoded sha1sum of the file contents
-async function sha1sum(path) {
-  const buf = await fsp.readFile(path);
-  return crypto.createHash('sha1').update(buf).digest('base64');
+  return index.size;
 }
 
-function fileId(digest) {
-  return digest.slice(0, 4).replace('+', '_').replace('/', '-');
+// return url safe base64 encoded sha1sum of the file contents
+async function sha1sum(filename) {
+  const buf = await fs.promises.readFile(filename);
+  return crypto.createHash('sha1').update(buf).digest('base64');
 }
 
 // record extra file upload information
@@ -38,7 +40,7 @@ async function write(file) {
   const id = fileId(file.sha1);
   files.push(file);
   index.set(id, file);
-  fsp.appendFile(logPath, JSON.stringify(file) + '\n');
+  fs.promises.appendFile(logPath, `${JSON.stringify(file)}\n`);
   return id;
 }
 
@@ -48,18 +50,19 @@ function get(id) {
 }
 
 function ls() {
-  const directory = new Map(files.map(f => [
+  const directory = new Map(files.map((f) => [
     f.originalname,
     {
       name: f.originalname,
       id: fileId(f.sha1),
       size: f.size,
-      date: f.date
-    }
+      date: f.date,
+    },
   ]));
   return new Map([...directory].sort());
 }
 
+exports.init = init;
 exports.write = write;
 exports.get = get;
 exports.ls = ls;

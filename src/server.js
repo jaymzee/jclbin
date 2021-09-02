@@ -1,22 +1,21 @@
-'use strict'
+'use strict';
 
-const ip = require('./ip');
-const log = require('./log');
 const express = require('express');
 const fs = require('fs');
-const fsp = require('fs/promises');
 const multer = require('multer');
 const path = require('path');
 const process = require('process');
+const ip = require('./ip');
+const log = require('./log');
 
 const app = express();
 const root = 'public';
-const static_ = path.join(root, 'static');
-const upload = multer({dest: path.join(root, 'uploads')});
-const layout = fs.readFileSync(path.join(static_, 'layout.html'), 'utf8');
-const manPage = fs.readFileSync(path.join(static_, 'manpage.txt'), 'utf8');
+const statics = path.join(root, 'static');
+const upload = multer({ dest: path.join(root, 'uploads') });
+const layout = fs.readFileSync(path.join(statics, 'layout.html'), 'utf8');
+const manPage = fs.readFileSync(path.join(statics, 'manpage.txt'), 'utf8');
 const protocol = 'http';
-const port = parseInt(process.argv.slice(-1)[0]) || 5000;
+const port = parseInt(process.argv.slice(-1)[0], 10) || 5000;
 const agentPrefersText = /curl|PowerShell|hjdicks/;
 
 // pad an unsigned number with n spaces or zeros
@@ -32,31 +31,33 @@ function getManPage(req, res) {
 
 // favicon
 app.get('/favicon.ico', async (req, res) => {
+  const filename = path.join(statics, 'favicon.ico');
   res.contentType('image/png');
-  res.send(await fsp.readFile(path.join('public', 'static', 'favicon.ico')));
+  res.send(await fs.promises.readFile(filename));
 });
 
 // upload form
 app.get('/f/upload', async (req, res) => {
-  const s = await fsp.readFile(path.join('public', 'static', 'upload.html'));
-  res.send(layout.replace('{BODY}', `${s}`));
+  const filename = path.join(statics, 'upload.html');
+  const form = await fs.promises.readFile(filename);
+  res.send(layout.replace('{BODY}', form));
 });
 
 // list uploads
 app.get('/sh/ls', (req, res) => {
-  function df(d) {
+  const month = new Intl.DateTimeFormat('en', { month: 'short' });
+  const df = (d) => {
     const mo = month.format(d);
     const da = pad(d.getDate(), 2, ' ');
     const hr = pad(d.getHours(), 2, '0');
     const mn = pad(d.getMinutes(), 2, '0');
     return `${mo} ${da} ${hr}:${mn}`;
-  }
-  const month = new Intl.DateTimeFormat('en', { month: 'short' });
+  };
   const dir = [...log.ls().values()];
-  const s = dir.map(f => `${f.id} ${pad(f.size, 9, ' ')} ` +
-                         `${df(f.date)} ${f.name}`).join('\n');
+  const s = dir.map((f) => `${f.id} ${pad(f.size, 9, ' ')} `
+                    + `${df(f.date)} ${f.name}`).join('\n');
   res.contentType('text/plain');
-  res.send(s + '\n');
+  res.send(`${s}\n`);
 });
 
 // man page (default route)
@@ -65,14 +66,15 @@ app.get('/sh/man', getManPage);
 // retreive uploaded file
 app.get('/:id', (req, res) => {
   const remote = req.socket.remoteAddress;
-  const id = req.params.id;
+  const { id } = req.params;
   const file = log.get(id);
   if (!file) {
-    res.status(404).send("bad id " + id);
+    res.status(404).send(`bad id ${id}`);
     return;
   }
   res.contentType(file.mimetype);
   res.set('Content-Disposition', `attachment; filename="${file.originalname}"`);
+  /* eslint-disable-next-line no-console */
   console.log('file dnld:', file.sha1, file.originalname, remote);
   res.sendFile(file.path, { root: process.cwd() });
 });
@@ -93,16 +95,19 @@ app.post('/', upload.single('f'), async (req, res) => {
     return;
   }
   const remote = req.socket.remoteAddress;
-  const file = Object.assign({remote}, req.file);
+  const file = { ...req.file, remote };
   const baseUrl = `${protocol}://${req.headers.host}`;
   const tag = await log.write(file);
+  /* eslint-disable-next-line no-console */
   console.log('file upld:', file.sha1, file.originalname, remote);
   res.send(`${baseUrl}/${tag}\n`);
 });
 
-const server = app.listen(port, () => {
+/* eslint-disable-next-line no-console */
+console.log(`${log.init()} files in uploads`);
+app.listen(port, () => {
   for (const [ifname, addresses] of Object.entries(ip.enumerateIfs(false))) {
+    /* eslint-disable-next-line no-console */
     console.log(`listening on [${ifname}] http://${addresses[0]}:${port}`);
   }
 });
-
