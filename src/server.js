@@ -45,17 +45,18 @@ app.get('/f/upload', async (req, res) => {
 // list uploads
 app.get('/sh/ls', (req, res) => {
   function df(d) {
-    const mo = new Intl.DateTimeFormat('en', { month: 'short' }).format(d);
+    const mo = month.format(d);
     const da = pad(d.getDate(), 2, ' ');
     const hr = pad(d.getHours(), 2, '0');
     const mn = pad(d.getMinutes(), 2, '0');
     return `${mo} ${da} ${hr}:${mn}`;
   }
+  const month = new Intl.DateTimeFormat('en', { month: 'short' });
   const dir = [...log.ls().values()];
-  const a = dir.map(f => `${f.id} ${pad(f.size, 9, ' ')} ` +
-                         `${df(f.date)} ${f.name}`);
+  const s = dir.map(f => `${f.id} ${pad(f.size, 9, ' ')} ` +
+                         `${df(f.date)} ${f.name}`).join('\n');
   res.contentType('text/plain');
-  res.send(a.join('\n') + '\n');
+  res.send(s + '\n');
 });
 
 // man page (default route)
@@ -63,7 +64,7 @@ app.get('/sh/man', getManPage);
 
 // retreive uploaded file
 app.get('/:id', (req, res) => {
-  const remote = req.connection.remoteAddress;
+  const remote = req.socket.remoteAddress;
   const id = req.params.id;
   const file = log.get(id);
   if (!file) {
@@ -75,6 +76,7 @@ app.get('/:id', (req, res) => {
   res.sendFile(file.path, { root: process.cwd() });
 });
 
+// man page
 app.get('/', (req, res) => {
   if (agentPrefersText.test(req.headers['user-agent'])) {
     getManPage(req, res);
@@ -89,7 +91,7 @@ app.post('/', upload.single('f'), async (req, res) => {
     res.sendStatus(400);
     return;
   }
-  const remote = req.connection.remoteAddress;
+  const remote = req.socket.remoteAddress;
   const file = Object.assign({remote}, req.file);
   const baseUrl = `${protocol}://${req.headers.host}`;
   const tag = await log.write(file);
