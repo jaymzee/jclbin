@@ -52,7 +52,7 @@ app.get('/sh/ls', (req, res) => {
     return `${mo} ${da} ${hr}:${mn}`;
   }
   const dir = [...log.ls().values()];
-  const a = dir.map(f => `${f.id} ${pad(f.size, 10, ' ')} ` +
+  const a = dir.map(f => `${f.id} ${pad(f.size, 9, ' ')} ` +
                          `${df(f.date)} ${f.name}`);
   res.contentType('text/plain');
   res.send(a.join('\n') + '\n');
