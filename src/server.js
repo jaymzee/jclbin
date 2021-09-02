@@ -71,6 +71,7 @@ app.get('/:id', (req, res) => {
     res.status(404).send("bad id " + id);
     return;
   }
+  res.contentType(file.mimetype);
   res.set('Content-Disposition', `attachment; filename="${file.originalname}"`);
   console.log('file dnld:', file.sha1, file.originalname, remote);
   res.sendFile(file.path, { root: process.cwd() });
