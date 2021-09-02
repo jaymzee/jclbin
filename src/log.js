@@ -5,15 +5,15 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 
-const files = []
+const files = [];
 const index = new Map();
 const logPath = path.join('public', 'uploads', 'log.json');
 (() => {
   if (fs.existsSync(logPath)) {
     const s = fs.readFileSync(logPath, 'utf8').replace(/\n/g, ',');
     for (const f of JSON.parse(`[${s.slice(0, -1)}]`)) {
-      f.date = new Date(f.date) // parse string
-      files.push(f)
+      f.date = new Date(f.date); // parse string
+      files.push(f);
       index.set(fileId(f.sha1), f);
     }
     console.log(`${index.size} files in uploads`);

@@ -10,8 +10,8 @@ const path = require('path');
 const process = require('process');
 
 const app = express();
-const root = 'public'
-const static_ = path.join(root, 'static')
+const root = 'public';
+const static_ = path.join(root, 'static');
 const upload = multer({dest: path.join(root, 'uploads')});
 const layout = fs.readFileSync(path.join(static_, 'layout.html'), 'utf8');
 const manPage = fs.readFileSync(path.join(static_, 'manpage.txt'), 'utf8');
@@ -21,7 +21,7 @@ const agentPrefersText = /curl|PowerShell|hjdicks/;
 
 // pad an unsigned number with n spaces or zeros
 function pad(num, n, c) {
-  return num.toString().padStart(n, c)
+  return num.toString().padStart(n, c);
 }
 
 // man page always text/plain
@@ -46,10 +46,10 @@ app.get('/f/upload', async (req, res) => {
 app.get('/sh/ls', (req, res) => {
   function df(d) {
     const mo = new Intl.DateTimeFormat('en', { month: 'short' }).format(d);
-    const da = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(d);
-    const hr = pad(d.getHours(), 2, '0')
-    const mn = pad(d.getMinutes(), 2, '0')
-    return `${mo} ${da} ${hr}:${mn}`
+    const da = pad(d.getDate(), 2, ' ');
+    const hr = pad(d.getHours(), 2, '0');
+    const mn = pad(d.getMinutes(), 2, '0');
+    return `${mo} ${da} ${hr}:${mn}`;
   }
   const dir = [...log.ls().values()];
   const a = dir.map(f => `${f.id} ${pad(f.size, 10, ' ')} ` +
@@ -77,7 +77,7 @@ app.get('/:id', (req, res) => {
 
 app.get('/', (req, res) => {
   if (agentPrefersText.test(req.headers['user-agent'])) {
-    getManPage(req, res)
+    getManPage(req, res);
   } else {
     res.send(layout.replace('{BODY}', `<pre>${manPage}</pre>`));
   }
@@ -91,7 +91,7 @@ app.post('/', upload.single('f'), async (req, res) => {
   }
   const remote = req.connection.remoteAddress;
   const file = Object.assign({remote}, req.file);
-  const baseUrl = `${protocol}://${req.headers.host}`
+  const baseUrl = `${protocol}://${req.headers.host}`;
   const tag = await log.write(file);
   console.log('file upld:', file.sha1, file.originalname, remote);
   res.send(`${baseUrl}/${tag}\n`);
