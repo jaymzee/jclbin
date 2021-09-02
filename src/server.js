@@ -1,12 +1,10 @@
-'use strict';
-
-const express = require('express');
-const fs = require('fs');
-const multer = require('multer');
-const path = require('path');
-const process = require('process');
-const ip = require('./ip');
-const log = require('./log');
+import express from 'express';
+import fs from 'fs';
+import multer from 'multer';
+import path from 'path';
+import process from 'process';
+import ip from './ip';
+import log from './log';
 
 const app = express();
 const root = 'public';

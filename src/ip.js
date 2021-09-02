@@ -1,6 +1,4 @@
-'use strict';
-
-const os = require('os');
+import os from 'os';
 
 // return ipv4 interfaces
 function enumerateIfs(nonlocal) {
@@ -22,4 +20,4 @@ function enumerateIfs(nonlocal) {
   return results;
 }
 
-exports.enumerateIfs = enumerateIfs;
+export default { enumerateIfs };

@@ -1,8 +1,6 @@
-'use strict';
-
-const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 const files = [];
 const index = new Map();
@@ -62,7 +60,9 @@ function ls() {
   return new Map([...directory].sort());
 }
 
-exports.init = init;
-exports.write = write;
-exports.get = get;
-exports.ls = ls;
+export default {
+  init,
+  write,
+  get,
+  ls,
+};
