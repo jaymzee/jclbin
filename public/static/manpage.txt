@@ -4,7 +4,7 @@ NAME
     jclbin: command line pastebin:
 
 SYNOPSIS
-    curl -F 'jclbin=@filename' http://example.com
+    curl -F 'f=@filename' http://example.com
 
 DESCRIPTION
     A simple http pastebin server like ix.io, clbin.com, or sprunge.us
